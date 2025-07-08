@@ -1,20 +1,28 @@
 import { BreachData } from '@/components/ResultsCard';
 
 const RAPIDAPI_BASE = 'https://breachdirectory.p.rapidapi.com';
-const RAPIDAPI_KEY = 'd1b924367dmsh72fe49ad89c7c48p18ed9cjsn80d26d6657ae';
 
 // Email breach checking using RapidAPI Breach Directory
-export const checkEmailBreaches = async (email: string): Promise<BreachData[]> => {
+export const checkEmailBreaches = async (email: string, apiKey?: string): Promise<BreachData[]> => {
   try {
+    // Use provided API key or the default one
+    const rapidApiKey = apiKey || 'd1b924367dmsh72fe49ad89c7c48p18ed9cjsn80d26d6657ae';
+    
     const response = await fetch(`${RAPIDAPI_BASE}/?func=auto&term=${encodeURIComponent(email)}`, {
       method: 'GET',
       headers: {
         'x-rapidapi-host': 'breachdirectory.p.rapidapi.com',
-        'x-rapidapi-key': RAPIDAPI_KEY,
+        'x-rapidapi-key': rapidApiKey,
       },
     });
 
     if (!response.ok) {
+      if (response.status === 403) {
+        const errorData = await response.json().catch(() => ({}));
+        if (errorData.message?.includes('not subscribed')) {
+          throw new Error('API key is not subscribed to Breach Directory service. Please provide a valid RapidAPI key with Breach Directory access.');
+        }
+      }
       throw new Error(`API error: ${response.status} ${response.statusText}`);
     }
 
@@ -47,7 +55,7 @@ export const checkEmailBreaches = async (email: string): Promise<BreachData[]> =
     return breaches;
   } catch (error) {
     console.error('Error checking email breaches:', error);
-    throw new Error('Failed to check email breaches. Please try again.');
+    throw error; // Re-throw the original error to preserve the specific message
   }
 };
 

@@ -1,9 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import Header from '@/components/Header';
 import SearchForm from '@/components/SearchForm';
 import ResultsCard, { BreachData } from '@/components/ResultsCard';
 import SearchHistory, { SearchHistoryItem } from '@/components/SearchHistory';
+import ApiKeyInput from '@/components/ApiKeyInput';
 import { checkEmailBreaches, checkPasswordBreaches } from '@/services/breachService';
 import { saveSearchToHistory, getSearchHistory, clearSearchHistory } from '@/utils/storage';
 
@@ -17,10 +19,16 @@ const Index = () => {
     error?: string;
   } | null>(null);
   const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
+  const [apiKey, setApiKey] = useState<string>('');
   const { toast } = useToast();
 
   useEffect(() => {
     setSearchHistory(getSearchHistory());
+    // Load saved API key
+    const savedApiKey = localStorage.getItem('rapidapi_key');
+    if (savedApiKey) {
+      setApiKey(savedApiKey);
+    }
   }, []);
 
   const handleEmailSearch = async (email: string) => {
@@ -28,7 +36,7 @@ const Index = () => {
     setResults(null);
 
     try {
-      const breaches = await checkEmailBreaches(email);
+      const breaches = await checkEmailBreaches(email, apiKey);
       const hasBreaches = breaches.length > 0;
       
       setResults({
@@ -131,6 +139,10 @@ const Index = () => {
     });
   };
 
+  const handleApiKeyChange = (newApiKey: string) => {
+    setApiKey(newApiKey);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
@@ -147,6 +159,12 @@ const Index = () => {
               Stay informed, stay secure.
             </p>
           </div>
+
+          {/* API Key Configuration */}
+          <ApiKeyInput 
+            onApiKeyChange={handleApiKeyChange}
+            currentApiKey={apiKey}
+          />
 
           {/* Search Form */}
           <SearchForm
