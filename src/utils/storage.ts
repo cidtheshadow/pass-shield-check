@@ -4,7 +4,7 @@ import { SearchHistoryItem } from '@/components/SearchHistory';
 const STORAGE_KEY = 'securepass_history';
 
 export const saveSearchToHistory = (
-  type: 'email' | 'password',
+  type: 'password',
   query: string,
   hasBreaches: boolean,
   breachCount?: number
@@ -14,7 +14,7 @@ export const saveSearchToHistory = (
     const newItem: SearchHistoryItem = {
       id: Date.now().toString(),
       type,
-      query: type === 'password' ? '*'.repeat(query.length) : query, // Mask passwords in history
+      query: '*'.repeat(query.length), // Mask passwords in history
       timestamp: Date.now(),
       hasBreaches,
       breachCount,
