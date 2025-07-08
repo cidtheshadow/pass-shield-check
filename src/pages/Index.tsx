@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import Header from '@/components/Header';
@@ -183,7 +182,7 @@ const Index = () => {
               </h3>
               <div className="text-sm text-blue-800 space-y-2">
                 <p>
-                  <strong>Email checks:</strong> Your email is sent securely to HaveIBeenPwned's API to check against their breach database.
+                  <strong>Email checks:</strong> Your email is sent securely to Breach Directory's API to check against their breach database.
                 </p>
                 <p>
                   <strong>Password checks:</strong> We use K-Anonymity to protect your password. Only the first 5 characters of your password's hash are sent to the API - your actual password never leaves your device.

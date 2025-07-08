@@ -16,7 +16,7 @@ const Header = () => {
             </div>
           </div>
           <div className="text-sm text-gray-600">
-            Powered by HaveIBeenPwned
+            Powered by Breach Directory
           </div>
         </div>
       </div>

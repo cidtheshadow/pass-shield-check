@@ -1,27 +1,49 @@
-
 import { BreachData } from '@/components/ResultsCard';
 
-const HIBP_API_BASE = 'https://haveibeenpwned.com/api/v3';
-const HIBP_PASSWORD_API = 'https://api.pwnedpasswords.com';
+const RAPIDAPI_BASE = 'https://breachdirectory.p.rapidapi.com';
+const RAPIDAPI_KEY = 'd1b924367dmsh72fe49ad89c7c48p18ed9cjsn80d26d6657ae';
 
-// Email breach checking
+// Email breach checking using RapidAPI Breach Directory
 export const checkEmailBreaches = async (email: string): Promise<BreachData[]> => {
   try {
-    const response = await fetch(`${HIBP_API_BASE}/breachedaccount/${encodeURIComponent(email)}?truncateResponse=false`, {
+    const response = await fetch(`${RAPIDAPI_BASE}/?func=auto&term=${encodeURIComponent(email)}`, {
+      method: 'GET',
       headers: {
-        'User-Agent': 'SecurePass+',
+        'x-rapidapi-host': 'breachdirectory.p.rapidapi.com',
+        'x-rapidapi-key': RAPIDAPI_KEY,
       },
     });
 
-    if (response.status === 404) {
-      return []; // No breaches found
-    }
-
     if (!response.ok) {
-      throw new Error(`API error: ${response.status}`);
+      throw new Error(`API error: ${response.status} ${response.statusText}`);
     }
 
-    const breaches: BreachData[] = await response.json();
+    const data = await response.json();
+    console.log('RapidAPI response:', data);
+
+    // Transform RapidAPI response to match our BreachData interface
+    if (!data.found || !data.result || data.result.length === 0) {
+      return [];
+    }
+
+    const breaches: BreachData[] = data.result.map((breach: any) => ({
+      Name: breach.source || 'Unknown',
+      Title: breach.source || 'Data Breach',
+      Domain: breach.domain || '',
+      BreachDate: breach.breach_date || new Date().toISOString().split('T')[0],
+      AddedDate: new Date().toISOString(),
+      ModifiedDate: new Date().toISOString(),
+      PwnCount: breach.entries || 0,
+      Description: `Email found in ${breach.source || 'data breach'}`,
+      LogoPath: '',
+      DataClasses: breach.fields ? breach.fields.split(',').map((field: string) => field.trim()) : ['Email addresses'],
+      IsVerified: true,
+      IsFabricated: false,
+      IsSensitive: false,
+      IsRetired: false,
+      IsSpamList: false,
+    }));
+
     return breaches;
   } catch (error) {
     console.error('Error checking email breaches:', error);
@@ -29,7 +51,8 @@ export const checkEmailBreaches = async (email: string): Promise<BreachData[]> =
   }
 };
 
-// Password breach checking using K-Anonymity
+// Password breach checking - keeping the original HIBP K-Anonymity method
+// since RapidAPI Breach Directory doesn't offer password checking
 export const checkPasswordBreaches = async (password: string): Promise<number> => {
   try {
     // Generate SHA-1 hash of the password
@@ -43,7 +66,7 @@ export const checkPasswordBreaches = async (password: string): Promise<number> =
     const prefix = hashHex.substring(0, 5);
     const suffix = hashHex.substring(5);
 
-    const response = await fetch(`${HIBP_PASSWORD_API}/range/${prefix}`, {
+    const response = await fetch(`https://api.pwnedpasswords.com/range/${prefix}`, {
       headers: {
         'User-Agent': 'SecurePass+',
       },
